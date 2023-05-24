@@ -1,0 +1,40 @@
+const axios = require('axios');
+const TelegramBot = require('node-telegram-bot-api');
+
+const telegramToken = '6075445730:AAGNIwfi0qAbcYRSNCDPrtyPZoXjYGGBGSM';
+const telegramChatId = '-963233264';
+
+// Fetching of random Wikipedia article
+const getRandomArticle = async () => {
+  const randomArticleUrl = 'http://en.wikipedia.org/w/api.php?action=query&list=random&rnnamespace=0&rnlimit=1&format=json';
+  const response = await axios.get(randomArticleUrl);
+  const randomPageId = response.data.query.random[0].id;
+  return randomPageId;
+};
+
+// Getting the summary of the random article
+const getArticleSummary = async (pageId) => {
+  const summaryUrl = `http://en.wikipedia.org/w/api.php?action=query&prop=extracts&exintro&explaintext&format=json&pageids=${pageId}`;
+  const response = await axios.get(summaryUrl);
+  const summary = response.data.query.pages[pageId].extract;
+  return summary;
+};
+
+// Creating a Telegram bot instance
+const bot = new TelegramBot(telegramToken);
+
+// Sending the random article and summary to the Telegram group
+const sendRandomArticle = async () => {
+  try {
+    const pageId = await getRandomArticle();
+    const summary = await getArticleSummary(pageId);
+    const message = `Random Wikipedia Article:\n\n${summary}`;
+
+    await bot.sendMessage(telegramChatId, message);
+    console.log('Message delievered successfully!!.');
+  } catch (error) {
+    console.error('Error occurred while sending the message:', error);
+  }
+};
+
+sendRandomArticle();
